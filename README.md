@@ -40,7 +40,7 @@
 
 以后每天北京时间 06:00，它会自动运行。
 
-## 🛠️ 技术栈
+##  技术栈
 - **Python 3.9**
 - **LangChain / OpenAI SDK**
 - **DeepSeek V3** (LLM)
