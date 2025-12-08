@@ -12,8 +12,8 @@ api_key = os.getenv("DEEPSEEK_API_KEY")
 pushplus_token = os.getenv("PUSHPLUS_TOKEN")
 
 # --- 网络配置 ---
-http_client = httpx.Client(trust_env=False)
-client = OpenAI(
+# timeout=120 表示允许等待 120 秒，防止 AI 思考太久导致报错
+http_client = httpx.Client(trust_env=False, timeout=120.0)client = OpenAI(
     api_key=api_key, 
     base_url="https://api.deepseek.com",
     http_client=http_client
