@@ -4,7 +4,7 @@
 ![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
 ![DeepSeek](https://img.shields.io/badge/AI-DeepSeek-critical)
 
-> 一个运行在 GitHub Actions 上的 AI 智能体。每天早上 6:00 自动抓取 Hacker News 热门文章，利用 DeepSeek 进行深度总结，并推送到你的微信。
+> 一个运行在 GitHub Actions 上的 AI 智能体。每天早上 6:00 自动抓取 Hacker News 热门文章，生成简报和原文链接，并推送至个人微信。
 
 ##  特性
 
@@ -23,7 +23,7 @@
 点击右上角的 **Fork** 按钮，将项目复刻到你的 GitHub 账号下。
 
 ### 2. 获取 API Key
-- **DeepSeek API Key**: [点击申请](https://platform.deepseek.com/) 
+- **DeepSeek API Key**: [点击申请](https://platform.deepseek.com/) （申请API并充值少量金额）
 - **PushPlus Token**: [点击获取](http://www.pushplus.plus/) (微信扫码)
 
 ### 3. 配置 GitHub Secrets
