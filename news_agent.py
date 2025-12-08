@@ -11,30 +11,43 @@ load_dotenv()
 api_key = os.getenv("DEEPSEEK_API_KEY")
 pushplus_token = os.getenv("PUSHPLUS_TOKEN")
 
-# --- 网络配置 ---
-# timeout=120 表示允许等待 120 秒，防止 AI 思考太久导致报错
-http_client = httpx.Client(trust_env=False, timeout=120.0)
+# --- 智能判断环境 ---
+# GitHub Actions 会自动注入一个叫 GITHUB_ACTIONS 的环境变量
+is_github_env = os.getenv("GITHUB_ACTIONS") == "true"
+
+if is_github_env:
+    print("[网络] 检测到 GitHub Actions 云端环境：使用标准连接 (Timeout=120s)")
+    # 云端：使用默认设置，只增加超时时间，不强制禁用环境配置
+    http_client = httpx.Client(timeout=120.0)
+    
+    # requests 的代理设置也设为 None (跟随系统)
+    REQUESTS_PROXIES = None 
+else:
+    print("[网络] 检测到本地开发环境：启用强力去代理模式 (Timeout=120s)")
+    # 本地：强制禁用代理，防止 VPN 干扰
+    http_client = httpx.Client(trust_env=False, timeout=120.0)
+    
+    # requests 强制禁用代理
+    REQUESTS_PROXIES = {"http": None, "https": None}
+
+# 初始化 OpenAI
 client = OpenAI(
     api_key=api_key, 
     base_url="https://api.deepseek.com",
     http_client=http_client
 )
-
-NO_PROXY = {
-    "http": None,
-    "https": None,
-}
-# ----------------
+# --------------------------------
 
 def get_top_n_stories(n=5):
     """获取 Hacker News 排行榜前 N 名的文章"""
     print(f"[系统] 正在查询 HN 排行榜前 {n} 名...")
     try:
-        top_ids = requests.get("https://hacker-news.firebaseio.com/v0/topstories.json", proxies=NO_PROXY, timeout=10).json()
+        # 使用动态的 REQUESTS_PROXIES
+        top_ids = requests.get("https://hacker-news.firebaseio.com/v0/topstories.json", proxies=REQUESTS_PROXIES, timeout=10).json()
         
         stories = []
         for sid in top_ids[:n]:
-            item = requests.get(f"https://hacker-news.firebaseio.com/v0/item/{sid}.json", proxies=NO_PROXY, timeout=10).json()
+            item = requests.get(f"https://hacker-news.firebaseio.com/v0/item/{sid}.json", proxies=REQUESTS_PROXIES, timeout=10).json()
             if 'url' in item:
                 stories.append({
                     'title': item.get('title'),
@@ -55,7 +68,7 @@ def fetch_content_with_jina(url):
     print(f"[阅读] 正在抓取: {url} ...")
     jina_url = f"https://r.jina.ai/{url}"
     try:
-        response = requests.get(jina_url, proxies=NO_PROXY, timeout=20)
+        response = requests.get(jina_url, proxies=REQUESTS_PROXIES, timeout=20)
         return response.text
     except Exception as e:
         print(f"   -> 读取失败: {e}")
@@ -84,6 +97,8 @@ def summarize_article(title, content):
         )
         return response.choices[0].message.content
     except Exception as e:
+        # 打印详细错误方便调试
+        print(f"[DeepSeek报错] {e}") 
         return f"总结失败: {e}"
 
 def send_wechat_digest(content_list):
@@ -94,16 +109,13 @@ def send_wechat_digest(content_list):
 
     print("[推送] 正在生成日报并推送...")
     
-    # 标题：12月08日 Hacker News 日报
     today_str = datetime.now().strftime("%m月%d日")
     final_title = f"{today_str} Hacker News 日报"
     
-    # 正文头部：去掉表情
     final_body = f"# Hacker News 精选 (Top {len(content_list)})\n---\n"
     
     for idx, item in enumerate(content_list, 1):
         final_body += f"## {idx}. {item['title']}\n"
-        # 链接去掉 🔗
         final_body += f"[原文链接]({item['url']})\n\n"
         final_body += f"{item['summary']}\n"
         final_body += "---\n\n" 
@@ -117,7 +129,7 @@ def send_wechat_digest(content_list):
     }
     
     try:
-        resp = requests.post(url, json=data, proxies=NO_PROXY, timeout=15)
+        resp = requests.post(url, json=data, proxies=REQUESTS_PROXIES, timeout=15)
         if resp.json().get("code") == 200:
             print(f"[成功] [{final_title}] 推送完成！")
         else:
@@ -148,7 +160,8 @@ if __name__ == "__main__":
             'summary': summary
         })
         
-        time.sleep(1)
+        # 稍微多停顿一下，防止并发过高
+        time.sleep(2)
 
     if digest_data:
         send_wechat_digest(digest_data)
