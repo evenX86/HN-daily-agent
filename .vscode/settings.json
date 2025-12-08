@@ -1,0 +1,7 @@
+{
+    "github.copilot.chat.commitMessageGeneration.instructions": [
+        {
+            "text": "Always generate the commit message in English, regardless of the file content language."
+        }
+    ]
+}
