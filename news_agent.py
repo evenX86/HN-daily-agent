@@ -6,6 +6,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI
 
+# 2025.12.08
+
 # 1. 初始化设置
 load_dotenv()
 api_key = os.getenv("DEEPSEEK_API_KEY")
