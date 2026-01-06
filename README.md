@@ -4,15 +4,16 @@
 ![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
 ![DeepSeek](https://img.shields.io/badge/AI-DeepSeek-critical)
 
-> 一个运行在 GitHub Actions 上的 AI 智能体。每天早上 6:00 自动抓取 Hacker News 热门文章，生成简报和原文链接，并推送至个人微信。
+> 一个运行在 GitHub Actions 上的 AI 智能体。每天早上 6:00 自动抓取 Hacker News 热门文章和 GitHub Trending 项目，生成简报和原文链接，并推送至个人微信。
 
 ##  特性
 
-- **自动抓取**：每天定时获取 Hacker News Top 榜单。
+- **自动抓取**：每天定时获取 Hacker News Top 榜单和 GitHub Trending 热门项目。
 - **智能去广**：使用 Jina Reader 提取纯净网页内容。
-- **深度总结**：调用 DeepSeek V3 (OpenAI 接口) 生成中文技术简报。
+- **深度总结**：调用 DeepSeek (OpenAI 接口) 生成中文技术简报。
 - **微信推送**：通过 PushPlus 推送 Markdown 格式日报到手机。
 - **零成本**：完全基于 GitHub Actions 免费运行，无需服务器。
+- **模块化架构**：代码结构清晰，易于维护和扩展。
 
 
 ##  如何使用 
@@ -41,9 +42,22 @@
 以后每天北京时间 06:00，它会自动运行。
 
 ##  技术栈
-- **Python 3.9**
-- **LangChain / OpenAI SDK**
-- **DeepSeek V3** (LLM)
-- **Jina Reader** (Web Parsing)
-- **GitHub Actions** (CI/CD)
+- **Python 3.9+**
+- **OpenAI SDK** (DeepSeek API 兼容)
+- **DeepSeek** (LLM)
+- **Jina Reader** (网页解析)
+- **GitHub Actions** (自动化调度)
+
+##  项目结构
+
+```
+.
+├── config.py              # 环境配置和凭证管理
+├── hn_fetcher.py          # Hacker News 抓取模块
+├── github_trending.py     # GitHub Trending 抓取模块
+├── summarizer.py          # 文章总结模块
+├── notifier.py            # 微信推送模块
+├── news_agent.py          # 主程序入口
+└── requirements.txt       # 依赖列表
+```
 
