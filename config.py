@@ -3,13 +3,14 @@
 负责环境变量加载和网络配置初始化
 """
 import os
+from typing import Dict, Optional
 from dotenv import load_dotenv
 
 # 模块导入时自动加载环境变量
 load_dotenv()
 
 # 禁用代理的常量配置
-_NO_PROXY: dict[str, str | None] = {"http": None, "https": None}
+_NO_PROXY: Dict[str, Optional[str]] = {"http": None, "https": None}
 
 
 def get_deepseek_key() -> str:
@@ -28,6 +29,6 @@ def get_pushplus_token() -> str:
     return token
 
 
-def get_no_proxy() -> dict[str, str | None]:
+def get_no_proxy() -> Dict[str, Optional[str]]:
     """获取 NO_PROXY 配置字典，用于禁用代理"""
     return _NO_PROXY
