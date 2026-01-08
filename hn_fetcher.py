@@ -2,6 +2,7 @@
 HN抓取模块
 负责从 Hacker News 获取排行榜和文章内容
 """
+from typing import List, Dict, Any
 import requests
 from requests.exceptions import Timeout, ConnectionError, RequestException
 from config import get_no_proxy
@@ -13,7 +14,7 @@ class HNFetcher:
     def __init__(self):
         self.no_proxy = get_no_proxy()
 
-    def get_top_stories(self, n=5):
+    def get_top_stories(self, n: int = 5) -> List[Dict[str, Any]]:
         """
         获取 Hacker News 排行榜前 N 名的文章
 
@@ -23,6 +24,8 @@ class HNFetcher:
         Returns:
             list: 文章列表，每篇文章包含 title, url, score
         """
+        if not isinstance(n, int) or n <= 0:
+            raise ValueError("n 必须是正整数")
         print(f"[系统] 正在查询 HN 排行榜前 {n} 名...")
         try:
             resp = requests.get(
@@ -42,14 +45,15 @@ class HNFetcher:
                 )
                 item_resp.raise_for_status()
                 item = item_resp.json()
-                if 'url' in item:
+                if item and item.get('url') and item.get('title'):
                     stories.append({
-                        'title': item.get('title'),
-                        'url': item.get('url'),
+                        'title': item['title'],
+                        'url': item['url'],
                         'score': item.get('score', 0)
                     })
                 else:
-                    print(f"[跳过] 无链接文章: {item.get('title')}")
+                    title = item.get('title', '未知') if item else 'API返回null'
+                    print(f"[跳过] 无链接或无标题文章: {title}")
 
             return stories
         except Timeout as e:
@@ -62,7 +66,7 @@ class HNFetcher:
             print(f"[错误] 获取 HN 列表失败: {e}")
             return []
 
-    def fetch_content(self, url):
+    def fetch_content(self, url: str) -> str:
         """
         使用 Jina Reader 抓取文章内容
 
@@ -87,7 +91,8 @@ class HNFetcher:
             print(f"   -> 连接失败: {e}")
             return ""
         except requests.HTTPError as e:
-            print(f"   -> HTTP 错误 {response.status_code}: {e}")
+            status_code = e.response.status_code if e.response else "未知"
+            print(f"   -> HTTP 错误 {status_code}: {e}")
             return ""
         except RequestException as e:
             print(f"   -> 读取失败: {e}")
