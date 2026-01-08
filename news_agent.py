@@ -3,7 +3,7 @@ Hacker News 日报 Agent
 主入口：协调各模块完成每日新闻抓取、总结和推送
 """
 import time
-from config import load_env, get_deepseek_key, get_pushplus_token
+from config import get_deepseek_key, get_pushplus_token
 from hn_fetcher import HNFetcher
 from github_trending import GitHubTrendingFetcher
 from summarizer import Summarizer
@@ -16,7 +16,6 @@ def main():
 
     try:
         # 1. 初始化配置
-        load_env()
         api_key = get_deepseek_key()
         pushplus_token = get_pushplus_token()
 
