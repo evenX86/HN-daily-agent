@@ -13,12 +13,18 @@ def load_env():
 
 def get_deepseek_key():
     """获取 DeepSeek API Key"""
-    return os.getenv("DEEPSEEK_API_KEY")
+    key = os.getenv("DEEPSEEK_API_KEY")
+    if not key:
+        raise ValueError("环境变量 DEEPSEEK_API_KEY 未设置，请在 .env 文件中配置")
+    return key
 
 
 def get_pushplus_token():
     """获取 PushPlus Token"""
-    return os.getenv("PUSHPLUS_TOKEN")
+    token = os.getenv("PUSHPLUS_TOKEN")
+    if not token:
+        raise ValueError("环境变量 PUSHPLUS_TOKEN 未设置，请在 .env 文件中配置")
+    return token
 
 
 def get_no_proxy():

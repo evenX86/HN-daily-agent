@@ -3,6 +3,7 @@ HN抓取模块
 负责从 Hacker News 获取排行榜和文章内容
 """
 import requests
+from requests.exceptions import Timeout, ConnectionError, RequestException
 from config import get_no_proxy
 
 
@@ -24,19 +25,23 @@ class HNFetcher:
         """
         print(f"[系统] 正在查询 HN 排行榜前 {n} 名...")
         try:
-            top_ids = requests.get(
+            resp = requests.get(
                 "https://hacker-news.firebaseio.com/v0/topstories.json",
                 proxies=self.no_proxy,
                 timeout=10
-            ).json()
+            )
+            resp.raise_for_status()
+            top_ids = resp.json()
 
             stories = []
             for sid in top_ids[:n]:
-                item = requests.get(
+                item_resp = requests.get(
                     f"https://hacker-news.firebaseio.com/v0/item/{sid}.json",
                     proxies=self.no_proxy,
                     timeout=10
-                ).json()
+                )
+                item_resp.raise_for_status()
+                item = item_resp.json()
                 if 'url' in item:
                     stories.append({
                         'title': item.get('title'),
@@ -47,8 +52,14 @@ class HNFetcher:
                     print(f"[跳过] 无链接文章: {item.get('title')}")
 
             return stories
-        except Exception as e:
-            print(f"[错误] 获取列表失败: {e}")
+        except Timeout as e:
+            print(f"[错误] HN API 请求超时: {e}")
+            return []
+        except ConnectionError as e:
+            print(f"[错误] 无法连接到 HN API: {e}")
+            return []
+        except RequestException as e:
+            print(f"[错误] 获取 HN 列表失败: {e}")
             return []
 
     def fetch_content(self, url):
@@ -67,7 +78,17 @@ class HNFetcher:
         jina_url = f"https://r.jina.ai/{url}"
         try:
             response = requests.get(jina_url, proxies=self.no_proxy, timeout=20)
+            response.raise_for_status()
             return response.text
-        except Exception as e:
+        except Timeout as e:
+            print(f"   -> 读取超时: {e}")
+            return ""
+        except ConnectionError as e:
+            print(f"   -> 连接失败: {e}")
+            return ""
+        except requests.HTTPError as e:
+            print(f"   -> HTTP 错误 {response.status_code}: {e}")
+            return ""
+        except RequestException as e:
             print(f"   -> 读取失败: {e}")
             return ""

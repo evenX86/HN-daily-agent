@@ -24,6 +24,17 @@ class Summarizer:
             http_client=self.http_client
         )
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
+        """关闭 HTTP 客户端，释放资源"""
+        if self.http_client:
+            self.http_client.close()
+
     def summarize(self, title, content):
         """
         为单篇文章生成摘要

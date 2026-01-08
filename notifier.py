@@ -3,6 +3,7 @@
 负责通过 PushPlus 发送微信消息
 """
 import requests
+from requests.exceptions import Timeout, ConnectionError, RequestException
 from datetime import datetime
 from config import get_no_proxy
 
@@ -47,11 +48,21 @@ class WeChatNotifier:
 
         try:
             resp = requests.post(self.api_url, json=data, proxies=self.no_proxy, timeout=15)
-            if resp.json().get("code") == 200:
+            resp.raise_for_status()
+            result = resp.json()
+            if result.get("code") == 200:
                 print(f"[成功] [{title}] 推送完成！")
             else:
                 print(f"[失败] 推送被拒绝: {resp.text}")
-        except Exception as e:
+        except Timeout as e:
+            print(f"[错误] 推送请求超时: {e}")
+        except ConnectionError as e:
+            print(f"[错误] 无法连接到推送服务器: {e}")
+        except requests.HTTPError as e:
+            print(f"[错误] 推送HTTP错误 {resp.status_code}: {e}")
+        except ValueError as e:
+            print(f"[错误] 推送服务器返回了无效的JSON: {e}")
+        except RequestException as e:
             print(f"[错误] 推送网络错误: {e}")
 
     def _format_title(self):

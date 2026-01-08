@@ -14,47 +14,58 @@ def main():
     """主流程"""
     print("[系统] Agent 开始工作...")
 
-    # 1. 初始化配置
-    load_env()
-    api_key = get_deepseek_key()
-    pushplus_token = get_pushplus_token()
+    try:
+        # 1. 初始化配置
+        load_env()
+        api_key = get_deepseek_key()
+        pushplus_token = get_pushplus_token()
 
-    # 2. 创建各模块实例
-    hn_fetcher = HNFetcher()
-    gh_fetcher = GitHubTrendingFetcher()
-    summarizer = Summarizer(api_key)
-    notifier = WeChatNotifier(pushplus_token)
+        # 2. 创建各模块实例
+        hn_fetcher = HNFetcher()
+        gh_fetcher = GitHubTrendingFetcher()
 
-    # 3. 获取 HN 文章列表
-    stories = hn_fetcher.get_top_stories(n=5)
+        # 使用 context manager 确保 Summarizer 资源正确释放
+        with Summarizer(api_key) as summarizer:
+            notifier = WeChatNotifier(pushplus_token)
 
-    # 获取 GitHub Trending 项目
-    gh_repos = gh_fetcher.get_trending_repos(n=5)
+            # 3. 获取 HN 文章列表
+            stories = hn_fetcher.get_top_stories(n=5)
 
-    digest_data = []
+            # 获取 GitHub Trending 项目
+            gh_repos = gh_fetcher.get_trending_repos(n=5)
 
-    # 4. 处理每篇 HN 文章
-    for story in stories:
-        content = hn_fetcher.fetch_content(story['url'])
+            digest_data = []
 
-        if len(content) < 100:
-            summary = "无法抓取正文，请直接点击链接查看。"
-        else:
-            summary = summarizer.summarize(story['title'], content)
+            # 4. 处理每篇 HN 文章
+            for story in stories:
+                content = hn_fetcher.fetch_content(story['url'])
 
-        digest_data.append({
-            'title': story['title'],
-            'url': story['url'],
-            'summary': summary
-        })
+                if len(content) < 100:
+                    summary = "无法抓取正文，请直接点击链接查看。"
+                else:
+                    summary = summarizer.summarize(story['title'], content)
 
-        time.sleep(1)
+                digest_data.append({
+                    'title': story['title'],
+                    'url': story['url'],
+                    'summary': summary
+                })
 
-    # 5. 推送日报（HN 文章 + GitHub Trending）
-    if digest_data or gh_repos:
-        notifier.send_digest(digest_data, gh_repos)
-    else:
-        print("[系统] 今天没有抓取到有效新闻。")
+                time.sleep(1)
+
+            # 5. 推送日报（HN 文章 + GitHub Trending）
+            if digest_data or gh_repos:
+                notifier.send_digest(digest_data, gh_repos)
+            else:
+                print("[系统] 今天没有抓取到有效新闻。")
+
+    except ValueError as e:
+        print(f"[配置错误] {e}")
+        print("[提示] 请检查 .env 文件中的环境变量配置")
+        return
+    except Exception as e:
+        print(f"[错误] Agent 运行失败: {e}")
+        return
 
 
 if __name__ == "__main__":
