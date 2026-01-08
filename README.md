@@ -2,7 +2,7 @@
 
 ![Stars](https://img.shields.io/github/stars/GeYugong/HN-daily-agent?style=social)
 ![Forks](https://img.shields.io/github/forks/GeYugong/HN-daily-agent?style=social)
-![License](https://img.shields.io/github/license/GeYugong/HN-daily-agent)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
 ![DeepSeek](https://img.shields.io/badge/AI-DeepSeek-critical)
 
